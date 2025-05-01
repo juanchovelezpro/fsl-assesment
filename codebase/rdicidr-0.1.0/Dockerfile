@@ -1,21 +1,21 @@
-FROM node:15 as builder
+FROM node:15 AS builder
 
-WORKDIR
+WORKDIR /app
 
-COPY
+COPY package*.json /app
 
-RUN 
+RUN npm install
 
-COPY
+COPY . .
 
-RUN 
+RUN npm run build
 
-FROM
+FROM nginx:alpine AS production
 
-WORKDIR
+#WORKDIR 
 
-COPY
+COPY --from=builder /app/build /usr/share/nginx/html
 
-RUN 
+#RUN 
 
-ENTRYPOINT 
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
