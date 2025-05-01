@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rdicidr
+  namespace: production
+spec:
+  selector:
+    matchLabels:
+      app: rdicidr
+  serviceName: "rdicidr"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: rdicidr
+    spec:
+      containers:
+      - name: rdicidr
+        image: juanchovelezpro/rdicidr:latest
+        ports:
+        - containerPort: 80
+          name: web
+        envFrom:
+          - secretRef:
+              name: rdicidr-secret

@@ -9,6 +9,10 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   build:
     defaults:
@@ -27,3 +31,37 @@ jobs:
     - run: npm run prettier
     - run: CI=true npm run test
     - run: npm run build
+
+  package:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          audience: sts.amazonaws.com
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::862930663057:role/fsl-assesment-gh-role
+      - name: Build and Push 
+        working-directory: ./codebase/rdicidr-0.1.0
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 862930663057.dkr.ecr.us-east-1.amazonaws.com
+          docker build -t 862930663057.dkr.ecr.us-east-1.amazonaws.com/rdicidr:latest .
+          docker push 862930663057.dkr.ecr.us-east-1.amazonaws.com/rdicidr:latest
+
+  cd:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          audience: sts.amazonaws.com
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::862930663057:role/fsl-assesment-gh-role
+      - name: Apply manifests
+        run: |
+          aws eks update-kubeconfig --name fsl-assesment --region us-east-1
+          kubectl apply -f k8/
