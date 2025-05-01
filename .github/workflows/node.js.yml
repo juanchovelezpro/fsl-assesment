@@ -31,7 +31,9 @@ jobs:
     - run: npm run prettier
     - run: CI=true npm run test
     - run: npm run build
+    
   package:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +51,7 @@ jobs:
           docker push 862930663057.dkr.ecr.us-east-1.amazonaws.com/rdicidr:latest
 
   cd:
+    needs: package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
